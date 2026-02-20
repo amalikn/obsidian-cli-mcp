@@ -28,7 +28,7 @@ import { registerToggleTaskTool } from './tools/tasks/toggle-task.tool.js'
 
 export function createServer(): McpServer {
   const cli = new ObsidianCliService(
-    process.env['OBSIDIAN_BIN'] ?? '/Applications/Obsidian.app/Contents/MacOS/Obsidian',
+    process.env['OBSIDIAN_BIN'] ?? 'obsidian',
     process.env['OBSIDIAN_VAULT'] || undefined,
   )
 
