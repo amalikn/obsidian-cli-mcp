@@ -1,4 +1,7 @@
-import { execFile } from 'node:child_process/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+
+const execFileAsync = promisify(execFile)
 
 type CliArgs = Record<string, string | boolean | undefined>
 
@@ -10,7 +13,7 @@ export class ObsidianCliService {
 
   async run(command: string, args: CliArgs = {}): Promise<string> {
     const argv = this.buildArgv(command, args)
-    const { stdout } = await execFile(this.obsidianBin, argv)
+    const { stdout } = await execFileAsync(this.obsidianBin, argv)
     return stdout.trim()
   }
 

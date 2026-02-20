@@ -3,8 +3,12 @@ import type { Mock } from 'vitest'
 
 const mockExecFile: Mock = vi.fn()
 
-vi.mock('node:child_process/promises', () => ({
+vi.mock('node:child_process', () => ({
   execFile: mockExecFile,
+}))
+
+vi.mock('node:util', () => ({
+  promisify: (fn: unknown) => fn,
 }))
 
 const { ObsidianCliService } = await import('../../src/services/obsidian-cli.service.js')
