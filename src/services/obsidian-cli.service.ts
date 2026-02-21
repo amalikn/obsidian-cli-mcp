@@ -13,8 +13,18 @@ export class ObsidianCliService {
 
   async run(command: string, args: CliArgs = {}): Promise<string> {
     const argv = this.buildArgv(command, args)
-    const { stdout } = await execFileAsync(this.obsidianBin, argv)
-    return stdout.trim()
+    try {
+      const { stdout } = await execFileAsync(this.obsidianBin, argv, { maxBuffer: 10 * 1024 * 1024 })
+      return stdout.trim()
+    } catch (error) {
+      // Obsidian CLI often exits non-zero due to Electron stderr noise while
+      // still writing valid output to stdout. If stdout has content, use it.
+      const execError = error as NodeJS.ErrnoException & { stdout?: string }
+      if (execError.stdout?.trim()) {
+        return execError.stdout.trim()
+      }
+      throw error
+    }
   }
 
   private buildArgv(command: string, args: CliArgs): string[] {

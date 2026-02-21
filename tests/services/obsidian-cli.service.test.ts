@@ -29,7 +29,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read')
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read'], expect.any(Object))
     })
 
     it('appends string args as key=value tokens', async () => {
@@ -37,7 +37,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read', { file: 'My Note' })
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'file=My Note'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'file=My Note'], expect.any(Object))
     })
 
     it('appends boolean true args as flag tokens (no value)', async () => {
@@ -45,7 +45,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('files', { total: true })
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['files', 'total'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['files', 'total'], expect.any(Object))
     })
 
     it('skips undefined args', async () => {
@@ -53,7 +53,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read', { file: undefined, path: 'notes/foo.md' })
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'path=notes/foo.md'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'path=notes/foo.md'], expect.any(Object))
     })
 
     it('prepends vault arg when defaultVault is set', async () => {
@@ -62,7 +62,7 @@ describe('ObsidianCliService', () => {
 
       await serviceWithVault.run('read', { file: 'note' })
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'vault=MyVault', 'file=note'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'vault=MyVault', 'file=note'], expect.any(Object))
     })
 
     it('overrides defaultVault when vault arg is provided', async () => {
@@ -71,7 +71,16 @@ describe('ObsidianCliService', () => {
 
       await serviceWithVault.run('read', { vault: 'OtherVault', file: 'note' })
 
-      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'vault=OtherVault', 'file=note'])
+      expect(mockExecFile).toHaveBeenCalledWith(BIN, ['read', 'vault=OtherVault', 'file=note'], expect.any(Object))
+    })
+
+    it('returns stdout even when execFile rejects with non-zero exit (Electron stderr noise)', async () => {
+      const error = Object.assign(new Error('Command failed'), { stdout: 'vault info\n', stderr: 'Unable to find helper app\n' })
+      mockExecFile.mockRejectedValueOnce(error)
+
+      const result = await service.run('vault')
+
+      expect(result).toBe('vault info')
     })
 
     it('returns trimmed stdout on success', async () => {
