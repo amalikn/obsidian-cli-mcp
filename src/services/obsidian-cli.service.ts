@@ -1,7 +1,4 @@
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-
-const execFileAsync = promisify(execFile)
+import { spawn } from 'node:child_process'
 
 type CliArgs = Record<string, string | boolean | undefined>
 
@@ -13,18 +10,16 @@ export class ObsidianCliService {
 
   async run(command: string, args: CliArgs = {}): Promise<string> {
     const argv = this.buildArgv(command, args)
-    try {
-      const { stdout } = await execFileAsync(this.obsidianBin, argv, { maxBuffer: 10 * 1024 * 1024 })
-      return stdout.trim()
-    } catch (error) {
-      // Obsidian CLI often exits non-zero due to Electron stderr noise while
-      // still writing valid output to stdout. If stdout has content, use it.
-      const execError = error as NodeJS.ErrnoException & { stdout?: string }
-      if (execError.stdout?.trim()) {
-        return execError.stdout.trim()
-      }
-      throw error
-    }
+    return new Promise((resolve, reject) => {
+      const child = spawn(this.obsidianBin, argv)
+      let stdout = ''
+
+      // Capture stdout in real-time — Obsidian CLI may crash (Electron noise)
+      // after writing its output, so we must not wait for a clean exit.
+      child.stdout.on('data', (data: Buffer) => { stdout += data.toString() })
+      child.on('close', () => resolve(stdout.trim()))
+      child.on('error', reject)
+    })
   }
 
   private buildArgv(command: string, args: CliArgs): string[] {
