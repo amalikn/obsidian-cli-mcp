@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, execFileSync } from 'node:child_process'
 import os from 'node:os'
 
 type CliArgs = Record<string, string | boolean | undefined>
@@ -23,16 +23,26 @@ export class ObsidianCliService {
     })
   }
 
-  // Claude Desktop passes only the env vars defined in claude_desktop_config.json,
-  // so HOME, TMPDIR and USER may be absent. Obsidian CLI needs them to locate its
-  // IPC socket and communicate with the running Obsidian app.
+  // Claude Desktop passes only the env vars defined in claude_desktop_config.json
+  // to the MCP server process. Without HOME, TMPDIR and USER the Obsidian CLI
+  // cannot locate its IPC socket to communicate with the running Obsidian app.
+  // On macOS, os.tmpdir() returns /tmp when TMPDIR is unset, but Obsidian needs
+  // the real per-user temp dir (/var/folders/…/T/) — obtained via getconf.
   private spawnEnv(): NodeJS.ProcessEnv {
     const userInfo = os.userInfo()
     return {
       ...process.env,
       HOME: process.env['HOME'] ?? userInfo.homedir,
-      TMPDIR: process.env['TMPDIR'] ?? os.tmpdir(),
+      TMPDIR: process.env['TMPDIR'] ?? this.resolveTmpdir(),
       USER: process.env['USER'] ?? userInfo.username,
+    }
+  }
+
+  private resolveTmpdir(): string {
+    try {
+      return execFileSync('getconf', ['DARWIN_USER_TEMP_DIR'], { encoding: 'utf8' }).trim()
+    } catch {
+      return os.tmpdir()
     }
   }
 
