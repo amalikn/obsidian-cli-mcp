@@ -51,7 +51,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read')
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read'], expect.any(Object))
     })
 
     it('appends string args as key=value tokens', async () => {
@@ -59,7 +59,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read', { file: 'My Note' })
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'file=My Note'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'file=My Note'], expect.any(Object))
     })
 
     it('appends boolean true args as flag tokens (no value)', async () => {
@@ -67,7 +67,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('files', { total: true })
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['files', 'total'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['files', 'total'], expect.any(Object))
     })
 
     it('skips undefined args', async () => {
@@ -75,7 +75,7 @@ describe('ObsidianCliService', () => {
 
       await service.run('read', { file: undefined, path: 'notes/foo.md' })
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'path=notes/foo.md'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'path=notes/foo.md'], expect.any(Object))
     })
 
     it('prepends vault arg when defaultVault is set', async () => {
@@ -84,7 +84,7 @@ describe('ObsidianCliService', () => {
 
       await serviceWithVault.run('read', { file: 'note' })
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'vault=MyVault', 'file=note'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'vault=MyVault', 'file=note'], expect.any(Object))
     })
 
     it('overrides defaultVault when vault arg is provided', async () => {
@@ -93,7 +93,20 @@ describe('ObsidianCliService', () => {
 
       await serviceWithVault.run('read', { vault: 'OtherVault', file: 'note' })
 
-      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'vault=OtherVault', 'file=note'])
+      expect(mockSpawn).toHaveBeenCalledWith(BIN, ['read', 'vault=OtherVault', 'file=note'], expect.any(Object))
+    })
+
+    it('injects HOME, TMPDIR and USER into spawn env for Obsidian IPC to work', async () => {
+      mockChild()
+
+      await service.run('vault')
+
+      const [, , spawnOptions] = mockSpawn.mock.calls[0]
+      expect(spawnOptions.env).toMatchObject({
+        HOME: expect.any(String),
+        TMPDIR: expect.any(String),
+        USER: expect.any(String),
+      })
     })
 
     it('returns stdout even when process exits non-zero (Electron stderr noise)', async () => {

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import os from 'node:os'
 
 type CliArgs = Record<string, string | boolean | undefined>
 
@@ -11,7 +12,7 @@ export class ObsidianCliService {
   async run(command: string, args: CliArgs = {}): Promise<string> {
     const argv = this.buildArgv(command, args)
     return new Promise((resolve, reject) => {
-      const child = spawn(this.obsidianBin, argv)
+      const child = spawn(this.obsidianBin, argv, { env: this.spawnEnv() })
       let stdout = ''
 
       // Capture stdout in real-time — Obsidian CLI may crash (Electron noise)
@@ -20,6 +21,19 @@ export class ObsidianCliService {
       child.on('close', () => resolve(stdout.trim()))
       child.on('error', reject)
     })
+  }
+
+  // Claude Desktop passes only the env vars defined in claude_desktop_config.json,
+  // so HOME, TMPDIR and USER may be absent. Obsidian CLI needs them to locate its
+  // IPC socket and communicate with the running Obsidian app.
+  private spawnEnv(): NodeJS.ProcessEnv {
+    const userInfo = os.userInfo()
+    return {
+      ...process.env,
+      HOME: process.env['HOME'] ?? userInfo.homedir,
+      TMPDIR: process.env['TMPDIR'] ?? os.tmpdir(),
+      USER: process.env['USER'] ?? userInfo.username,
+    }
   }
 
   private buildArgv(command: string, args: CliArgs): string[] {
