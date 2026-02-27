@@ -25,6 +25,17 @@ import { registerAppendDailyTool } from './tools/daily/append-daily.tool.js'
 import { registerPrependDailyTool } from './tools/daily/prepend-daily.tool.js'
 import { registerListTasksTool } from './tools/tasks/list-tasks.tool.js'
 import { registerToggleTaskTool } from './tools/tasks/toggle-task.tool.js'
+import { registerListTemplatesTool } from './tools/templates/list-templates.tool.js'
+import { registerReadTemplateTool } from './tools/templates/read-template.tool.js'
+import { registerInsertTemplateTool } from './tools/templates/insert-template.tool.js'
+import { registerListBookmarksTool } from './tools/bookmarks/list-bookmarks.tool.js'
+import { registerAddBookmarkTool } from './tools/bookmarks/add-bookmark.tool.js'
+import { registerListDeadendsTool } from './tools/links/list-deadends.tool.js'
+import { registerListUnresolvedTool } from './tools/links/list-unresolved.tool.js'
+import { registerOutlineTool } from './tools/notes/outline.tool.js'
+import { registerWordcountTool } from './tools/notes/wordcount.tool.js'
+import { registerRenameNoteTool } from './tools/notes/rename-note.tool.js'
+import { registerFileInfoTool } from './tools/notes/file-info.tool.js'
 
 export function createServer(): McpServer {
   const cli = new ObsidianCliService(
@@ -59,6 +70,17 @@ export function createServer(): McpServer {
   registerPrependDailyTool(server, cli)
   registerListTasksTool(server, cli)
   registerToggleTaskTool(server, cli)
+  registerListTemplatesTool(server, cli)
+  registerReadTemplateTool(server, cli)
+  registerInsertTemplateTool(server, cli)
+  registerListBookmarksTool(server, cli)
+  registerAddBookmarkTool(server, cli)
+  registerListDeadendsTool(server, cli)
+  registerListUnresolvedTool(server, cli)
+  registerOutlineTool(server, cli)
+  registerWordcountTool(server, cli)
+  registerRenameNoteTool(server, cli)
+  registerFileInfoTool(server, cli)
 
   return server
 }
