@@ -23,7 +23,7 @@ export function registerListBookmarksTool(server: McpServer, cli: ObsidianCliSer
     'obsidian_list_bookmarks',
     {
       title: 'List Bookmarks',
-      description: 'List all bookmarks in the vault',
+      description: 'List all bookmarks saved in the Obsidian vault (starred items, pinned notes, folders, searches and URLs). Use this when the user asks about their bookmarks, starred notes, or saved items.',
       inputSchema: {
         total: z.boolean().optional().describe('Show only the total count'),
         verbose: z.boolean().optional().describe('Show detailed bookmark information'),

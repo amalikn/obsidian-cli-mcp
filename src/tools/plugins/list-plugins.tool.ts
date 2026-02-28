@@ -23,7 +23,7 @@ export function registerListPluginsTool(server: McpServer, cli: ObsidianCliServi
     'obsidian_list_plugins',
     {
       title: 'List Plugins',
-      description: 'List all installed plugins in the vault',
+      description: 'List all installed community plugins in the Obsidian vault. Use this when the user asks which plugins are installed, available, or configured.',
       inputSchema: {
         filter: z.string().optional().describe('Filter plugins by name or id'),
         versions: z.boolean().optional().describe('Include version information'),

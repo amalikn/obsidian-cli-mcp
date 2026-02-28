@@ -23,7 +23,7 @@ export function registerListPluginsEnabledTool(server: McpServer, cli: ObsidianC
     'obsidian_list_plugins_enabled',
     {
       title: 'List Enabled Plugins',
-      description: 'List only the currently enabled plugins in the vault',
+      description: 'List only the currently active/enabled community plugins in the Obsidian vault. Use this when the user asks which plugins are active, turned on, or currently running.',
       inputSchema: {
         filter: z.string().optional().describe('Filter plugins by name or id'),
         versions: z.boolean().optional().describe('Include version information'),
