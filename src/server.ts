@@ -36,6 +36,25 @@ import { registerOutlineTool } from './tools/notes/outline.tool.js'
 import { registerWordcountTool } from './tools/notes/wordcount.tool.js'
 import { registerRenameNoteTool } from './tools/notes/rename-note.tool.js'
 import { registerFileInfoTool } from './tools/notes/file-info.tool.js'
+import { registerListPluginsTool } from './tools/plugins/list-plugins.tool.js'
+import { registerListPluginsEnabledTool } from './tools/plugins/list-plugins-enabled.tool.js'
+import { registerGetPluginTool } from './tools/plugins/get-plugin.tool.js'
+import { registerEnablePluginTool } from './tools/plugins/enable-plugin.tool.js'
+import { registerDisablePluginTool } from './tools/plugins/disable-plugin.tool.js'
+import { registerInstallPluginTool } from './tools/plugins/install-plugin.tool.js'
+import { registerUninstallPluginTool } from './tools/plugins/uninstall-plugin.tool.js'
+import { registerHistoryListTool } from './tools/history/history-list.tool.js'
+import { registerHistoryReadTool } from './tools/history/history-read.tool.js'
+import { registerHistoryRestoreTool } from './tools/history/history-restore.tool.js'
+import { registerSyncStatusTool } from './tools/sync/sync-status.tool.js'
+import { registerSyncHistoryTool } from './tools/sync/sync-history.tool.js'
+import { registerSyncReadTool } from './tools/sync/sync-read.tool.js'
+import { registerSyncRestoreTool } from './tools/sync/sync-restore.tool.js'
+import { registerSyncDeletedTool } from './tools/sync/sync-deleted.tool.js'
+import { registerListBasesTool } from './tools/bases/list-bases.tool.js'
+import { registerQueryBaseTool } from './tools/bases/query-base.tool.js'
+import { registerListBaseViewsTool } from './tools/bases/list-base-views.tool.js'
+import { registerCreateBaseItemTool } from './tools/bases/create-base-item.tool.js'
 
 export function createServer(): McpServer {
   const cli = new ObsidianCliService(
@@ -81,6 +100,25 @@ export function createServer(): McpServer {
   registerWordcountTool(server, cli)
   registerRenameNoteTool(server, cli)
   registerFileInfoTool(server, cli)
+  registerListPluginsTool(server, cli)
+  registerListPluginsEnabledTool(server, cli)
+  registerGetPluginTool(server, cli)
+  registerEnablePluginTool(server, cli)
+  registerDisablePluginTool(server, cli)
+  registerInstallPluginTool(server, cli)
+  registerUninstallPluginTool(server, cli)
+  registerHistoryListTool(server, cli)
+  registerHistoryReadTool(server, cli)
+  registerHistoryRestoreTool(server, cli)
+  registerSyncStatusTool(server, cli)
+  registerSyncHistoryTool(server, cli)
+  registerSyncReadTool(server, cli)
+  registerSyncRestoreTool(server, cli)
+  registerSyncDeletedTool(server, cli)
+  registerListBasesTool(server, cli)
+  registerQueryBaseTool(server, cli)
+  registerListBaseViewsTool(server, cli)
+  registerCreateBaseItemTool(server, cli)
 
   return server
 }
