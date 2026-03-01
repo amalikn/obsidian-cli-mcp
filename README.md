@@ -14,11 +14,16 @@ MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) â€
 
 ## Installation
 
+No installation required â€” run directly with `npx`:
+
 ```bash
-git clone https://github.com/joemugen/obsidian-cli-mcp.git
-cd obsidian-cli-mcp
-npm install
-npm run build
+npx -y @joemugen/obsidian-cli-mcp
+```
+
+Or install globally:
+
+```bash
+npm install -g @joemugen/obsidian-cli-mcp
 ```
 
 ## Configuration
@@ -38,14 +43,20 @@ npm run build
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Edit the config file for your OS:
+
+| OS | Path |
+|----|------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 
 ```json
 {
   "mcpServers": {
     "obsidian-cli": {
-      "command": "node",
-      "args": ["/path/to/obsidian-cli-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
         "OBSIDIAN_VAULT": "MyVault"
@@ -67,8 +78,8 @@ Add to your project's `.mcp.json` (or `~/.claude/mcp.json` for global):
 {
   "mcpServers": {
     "obsidian-cli": {
-      "command": "node",
-      "args": ["/path/to/obsidian-cli-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
         "OBSIDIAN_VAULT": "MyVault"
@@ -84,7 +95,7 @@ Or add it directly from the CLI:
 claude mcp add --transport stdio \
   --env OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
   --env OBSIDIAN_VAULT=MyVault \
-  obsidian-cli -- node /path/to/obsidian-cli-mcp/dist/index.js
+  obsidian-cli -- npx -y @joemugen/obsidian-cli-mcp
 ```
 
 ---
@@ -97,8 +108,8 @@ Edit `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "obsidian-cli": {
-      "command": "node",
-      "args": ["/path/to/obsidian-cli-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
         "OBSIDIAN_VAULT": "MyVault"
@@ -119,8 +130,8 @@ Edit `~/.config/zed/settings.json`:
   "context_servers": {
     "obsidian-cli": {
       "command": {
-        "path": "node",
-        "args": ["/path/to/obsidian-cli-mcp/dist/index.js"],
+        "path": "npx",
+        "args": ["-y", "@joemugen/obsidian-cli-mcp"],
         "env": {
           "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
           "OBSIDIAN_VAULT": "MyVault"
@@ -276,6 +287,12 @@ The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 ---
 
 ## Development
+
+```bash
+git clone https://github.com/joemugen/obsidian-cli-mcp.git
+cd obsidian-cli-mcp
+npm install
+```
 
 ```bash
 npm test              # run unit tests (206 tests)

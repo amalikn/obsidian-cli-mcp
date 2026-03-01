@@ -7,6 +7,9 @@
   "bin": {
     "obsidian-cli-mcp": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsup",
