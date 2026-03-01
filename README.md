@@ -4,13 +4,13 @@ MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) â€
 
 ## Requirements
 
-- **macOS** (the Obsidian CLI is macOS-only)
-- **[Obsidian](https://obsidian.md)** desktop app running
-- **Obsidian CLI** installed via Homebrew:
-  ```bash
-  brew install obsidianmd/tap/obsidian
-  ```
+- **[Obsidian](https://obsidian.md)** desktop app running (macOS, Linux, Windows)
+- **Obsidian CLI** installed:
+  - macOS / Linux (via Homebrew): `brew install obsidianmd/tap/obsidian`
+  - Windows: see [Obsidian CLI releases](https://github.com/obsidianmd/obsidian-cli/releases)
 - **Node.js 22+**
+
+> **Platform notes:** Fully tested on macOS. Linux is supported via the same Homebrew tap (Linuxbrew). Windows support is untested â€” env var injection (`HOME`/`TMPDIR`) may behave differently; contributions welcome.
 
 ## Installation
 
@@ -30,7 +30,7 @@ npm run build
 | `MCP_TRANSPORT` | `stdio` or `http` | `stdio` |
 | `MCP_PORT` | HTTP port (when `MCP_TRANSPORT=http`) | `3000` |
 
-> **Important:** always point `OBSIDIAN_BIN` to the Homebrew binary (`$(brew --prefix)/bin/obsidian`). The Homebrew binary flushes stdout to the pipe correctly; a plain app bundle symlink does not.
+> **Important (macOS):** always point `OBSIDIAN_BIN` to the Homebrew binary (`$(brew --prefix)/bin/obsidian`). The Homebrew binary flushes stdout to the pipe correctly; a plain app bundle symlink does not.
 
 ---
 
@@ -81,9 +81,10 @@ Add to your project's `.mcp.json` (or `~/.claude/mcp.json` for global):
 Or add it directly from the CLI:
 
 ```bash
-claude mcp add obsidian-cli node /path/to/obsidian-cli-mcp/dist/index.js \
-  -e OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
-  -e OBSIDIAN_VAULT=MyVault
+claude mcp add --transport stdio \
+  --env OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
+  --env OBSIDIAN_VAULT=MyVault \
+  obsidian-cli -- node /path/to/obsidian-cli-mcp/dist/index.js
 ```
 
 ---
