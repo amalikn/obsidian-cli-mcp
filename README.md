@@ -286,60 +286,10 @@ The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 
 ---
 
-## Development
+## Contributing
 
-```bash
-git clone https://github.com/joemugen/obsidian-cli-mcp.git
-cd obsidian-cli-mcp
-npm install
-```
-
-```bash
-npm test              # run unit tests (206 tests)
-npm run test:watch    # watch mode
-npm run test:coverage # coverage report
-npm run build         # compile TypeScript → dist/
-npm run dev           # run with tsx (no build needed)
-npm run lint          # ESLint
-npm run format        # Prettier
-```
-
-## Architecture
-
-```
-src/
-├── index.ts                    # entrypoint — detects stdio vs HTTP
-├── server.ts                   # McpServer creation + tool registration
-├── transports/
-│   ├── stdio.ts
-│   └── http.ts                 # Fastify + StreamableHTTPServerTransport
-├── services/
-│   └── obsidian-cli.service.ts # spawn() wrapper around the CLI binary
-└── tools/
-    ├── notes/        # 10 tools
-    ├── vault/        # 3 tools
-    ├── search/       # 2 tools
-    ├── properties/   # 4 tools
-    ├── tags/         # 2 tools
-    ├── links/        # 5 tools
-    ├── daily/        # 3 tools
-    ├── tasks/        # 2 tools
-    ├── templates/    # 3 tools
-    ├── bookmarks/    # 2 tools
-    ├── plugins/      # 7 tools
-    ├── history/      # 3 tools
-    ├── sync/         # 5 tools
-    └── bases/        # 4 tools
-```
-
-### Key design decisions
-
-**`spawn` instead of `execFile`** — The Obsidian CLI is Electron-based. Electron can emit fatal errors and crash the process after writing its output. `spawn` captures stdout in real-time via `data` events, so the output is preserved even if the process crashes afterward.
-
-**ENV injection (HOME / TMPDIR / USER)** — Claude Desktop only propagates env vars explicitly listed in `claude_desktop_config.json`. Without `HOME`, `TMPDIR` and `USER`, the CLI cannot find its IPC socket to communicate with the running Obsidian app. The service injects these automatically.
-
-**`isError: true` on CLI errors** — Returns structured errors instead of throwing, so the LLM can recover and retry rather than crashing the tool call.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for architecture overview, design decisions, and how to add new tools.
 
 ## License
 
-MIT
+See [LICENSE](./LICENSE).
