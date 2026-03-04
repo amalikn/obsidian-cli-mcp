@@ -63,7 +63,11 @@ src/
     ├── plugins/      # 7 tools
     ├── history/      # 3 tools
     ├── sync/         # 5 tools
-    └── bases/        # 4 tools
+    ├── bases/        # 4 tools
+    ├── workspace/    # 3 tools
+    ├── commands/     # 4 tools
+    ├── themes/       # 5 tools
+    └── snippets/     # 4 tools
 ```
 
 Each domain directory contains one file per tool, following the pattern `{action}-{noun}.tool.ts`.

@@ -55,6 +55,29 @@ import { registerListBasesTool } from './tools/bases/list-bases.tool.js'
 import { registerQueryBaseTool } from './tools/bases/query-base.tool.js'
 import { registerListBaseViewsTool } from './tools/bases/list-base-views.tool.js'
 import { registerCreateBaseItemTool } from './tools/bases/create-base-item.tool.js'
+import { registerListVaultsTool } from './tools/vault/list-vaults.tool.js'
+import { registerVersionTool } from './tools/vault/version.tool.js'
+import { registerListRecentsTool } from './tools/vault/list-recents.tool.js'
+import { registerRandomReadTool } from './tools/vault/random-read.tool.js'
+import { registerListAliasesTool } from './tools/vault/list-aliases.tool.js'
+import { registerWorkspaceTool } from './tools/workspace/workspace.tool.js'
+import { registerListTabsTool } from './tools/workspace/list-tabs.tool.js'
+import { registerDailyPathTool } from './tools/workspace/daily-path.tool.js'
+import { registerListCommandsTool } from './tools/commands/list-commands.tool.js'
+import { registerExecuteCommandTool } from './tools/commands/execute-command.tool.js'
+import { registerListHotkeysTool } from './tools/commands/list-hotkeys.tool.js'
+import { registerGetHotkeyTool } from './tools/commands/get-hotkey.tool.js'
+import { registerListThemesTool } from './tools/themes/list-themes.tool.js'
+import { registerGetThemeTool } from './tools/themes/get-theme.tool.js'
+import { registerSetThemeTool } from './tools/themes/set-theme.tool.js'
+import { registerInstallThemeTool } from './tools/themes/install-theme.tool.js'
+import { registerUninstallThemeTool } from './tools/themes/uninstall-theme.tool.js'
+import { registerListSnippetsTool } from './tools/snippets/list-snippets.tool.js'
+import { registerListSnippetsEnabledTool } from './tools/snippets/list-snippets-enabled.tool.js'
+import { registerEnableSnippetTool } from './tools/snippets/enable-snippet.tool.js'
+import { registerDisableSnippetTool } from './tools/snippets/disable-snippet.tool.js'
+import { registerDiffTool } from './tools/notes/diff.tool.js'
+import { registerEvalTool } from './tools/notes/eval.tool.js'
 
 export function createServer(): McpServer {
   const cli = new ObsidianCliService(
@@ -119,6 +142,29 @@ export function createServer(): McpServer {
   registerQueryBaseTool(server, cli)
   registerListBaseViewsTool(server, cli)
   registerCreateBaseItemTool(server, cli)
+  registerListVaultsTool(server, cli)
+  registerVersionTool(server, cli)
+  registerListRecentsTool(server, cli)
+  registerRandomReadTool(server, cli)
+  registerListAliasesTool(server, cli)
+  registerWorkspaceTool(server, cli)
+  registerListTabsTool(server, cli)
+  registerDailyPathTool(server, cli)
+  registerListCommandsTool(server, cli)
+  registerExecuteCommandTool(server, cli)
+  registerListHotkeysTool(server, cli)
+  registerGetHotkeyTool(server, cli)
+  registerListThemesTool(server, cli)
+  registerGetThemeTool(server, cli)
+  registerSetThemeTool(server, cli)
+  registerInstallThemeTool(server, cli)
+  registerUninstallThemeTool(server, cli)
+  registerListSnippetsTool(server, cli)
+  registerListSnippetsEnabledTool(server, cli)
+  registerEnableSnippetTool(server, cli)
+  registerDisableSnippetTool(server, cli)
+  registerDiffTool(server, cli)
+  registerEvalTool(server, cli)
 
   return server
 }

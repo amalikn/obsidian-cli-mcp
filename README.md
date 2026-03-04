@@ -1,6 +1,6 @@
 # obsidian-cli-mcp
 
-MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) — exposes 55 semantic tools to read, write and manage your Obsidian vault from any MCP-compatible AI client.
+MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) — exposes 78 semantic tools to read, write and manage your Obsidian vault from any MCP-compatible AI client.
 
 ## Requirements
 
@@ -173,6 +173,8 @@ The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 | `obsidian_outline` | Get the heading outline of a note |
 | `obsidian_wordcount` | Get word and character count |
 | `obsidian_file_info` | Get file metadata (path, size, dates…) |
+| `obsidian_diff` | Compare two versions of a note |
+| `obsidian_eval` | Execute JavaScript in the Obsidian context |
 
 ### Vault
 
@@ -181,6 +183,11 @@ The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 | `obsidian_vault_info` | Show vault name, path and file count |
 | `obsidian_list_files` | List files, optionally filtered by folder or extension |
 | `obsidian_list_folders` | List all folders |
+| `obsidian_list_vaults` | List all Obsidian vaults |
+| `obsidian_version` | Get Obsidian and CLI version |
+| `obsidian_list_recents` | List recently opened files |
+| `obsidian_random_read` | Read a random note from the vault or a folder |
+| `obsidian_list_aliases` | List all note aliases defined in frontmatter |
 
 ### Search
 
@@ -274,6 +281,42 @@ The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 | `obsidian_sync_read` | Read a specific sync version |
 | `obsidian_sync_restore` | Restore a file to a sync version |
 | `obsidian_sync_deleted` | List files deleted from sync history |
+
+### Workspace
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_workspace` | Get the current workspace layout and open panes |
+| `obsidian_list_tabs` | List all currently open tabs |
+| `obsidian_daily_path` | Get the file path for today's daily note |
+
+### Commands & Hotkeys
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_list_commands` | List all available commands (command palette) |
+| `obsidian_execute_command` | Execute an Obsidian command by ID |
+| `obsidian_list_hotkeys` | List all configured keyboard shortcuts |
+| `obsidian_get_hotkey` | Get the hotkey for a specific command |
+
+### Themes
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_list_themes` | List all installed themes |
+| `obsidian_get_theme` | Get information about a specific theme |
+| `obsidian_set_theme` | Activate a theme (or reset to default) |
+| `obsidian_install_theme` | Install a community theme |
+| `obsidian_uninstall_theme` | Uninstall a theme |
+
+### Snippets
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_list_snippets` | List all installed CSS snippets |
+| `obsidian_list_snippets_enabled` | List only enabled CSS snippets |
+| `obsidian_enable_snippet` | Enable a CSS snippet |
+| `obsidian_disable_snippet` | Disable a CSS snippet |
 
 ### Bases *(requires Obsidian Bases plugin)*
 
