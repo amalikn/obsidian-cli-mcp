@@ -239,6 +239,72 @@ For significant changes, open an issue first to discuss the approach.
 
 ---
 
+## Release process
+
+### Versioning
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+| Bump | When |
+|------|------|
+| `patch` | Bug fixes, doc updates, no new tools |
+| `minor` | New tools, backward-compatible changes |
+| `major` | Breaking changes (renamed tools, removed params, transport changes) |
+
+Pre-releases use the `major.minor.patch-tag.N` format: `1.2.0-beta.1`, `2.0.0-rc.1`.
+
+### Cutting a stable release
+
+```bash
+# 1. Make sure main is clean and tests pass
+npm test
+
+# 2. Bump the version (updates package.json + creates a git tag)
+npm version patch   # or minor / major
+
+# 3. Push the commit and the tag
+git push origin main --tags
+```
+
+The `release` workflow triggers automatically on tag push and will:
+1. Run lint + build + tests
+2. Publish to npm with tag `latest`
+3. Create a GitHub Release with auto-generated changelog
+
+### Cutting a pre-release
+
+```bash
+# 1. Set the pre-release version manually
+npm version 1.2.0-beta.1 --no-git-tag-version
+git add package.json
+git commit -m "chore: bump version to 1.2.0-beta.1"
+
+# 2. Tag and push
+git tag v1.2.0-beta.1
+git push origin main --tags
+```
+
+The `release` workflow detects the `-` in the tag and will:
+1. Publish to npm with tag `next` (installable via `npx @joemugen/obsidian-cli-mcp@next`)
+2. Create a GitHub Release marked as **pre-release**
+
+### Required GitHub secret
+
+Before the first publish, add your npm token in the repository settings:
+
+`Settings → Secrets and variables → Actions → New repository secret`
+
+| Name | Value |
+|------|-------|
+| `NPM_TOKEN` | Your npm access token (`npm token create`) |
+
+### CI/CD overview
+
+| Event | Workflow | Steps |
+|-------|----------|-------|
+| Push to `main` or PR | `ci.yml` | lint → build → test |
+| Push tag `v*` | `release.yml` | lint → build → test → npm publish → GitHub Release |
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the same license as this project. See [LICENSE](./LICENSE) for details.
