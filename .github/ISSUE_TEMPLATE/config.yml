@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/joemugen/obsidian-cli-mcp/security/advisories/new
+    url: https://github.com/joemugen/obsidian-cli-mcp/security
     about: Please report security issues privately — do not open a public issue.
   - name: Commercial license
     url: https://github.com/joemugen/obsidian-cli-mcp
