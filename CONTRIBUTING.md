@@ -256,14 +256,14 @@ Pre-releases use the `major.minor.patch-tag.N` format: `1.2.0-beta.1`, `2.0.0-rc
 ### Cutting a stable release
 
 ```bash
-# 1. Make sure main is clean and tests pass
+# 1. Make sure master is clean and tests pass
 npm test
 
 # 2. Bump the version (updates package.json + creates a git tag)
 npm version patch   # or minor / major
 
 # 3. Push the commit and the tag
-git push origin main --tags
+git push origin master --tags
 ```
 
 The `release` workflow triggers automatically on tag push and will:
@@ -281,7 +281,7 @@ git commit -m "chore: bump version to 1.2.0-beta.1"
 
 # 2. Tag and push
 git tag v1.2.0-beta.1
-git push origin main --tags
+git push origin master --tags
 ```
 
 The `release` workflow detects the `-` in the tag and will:
@@ -302,7 +302,7 @@ Before the first publish, add your npm token in the repository settings:
 
 | Event | Workflow | Steps |
 |-------|----------|-------|
-| Push to `main` or PR | `ci.yml` | lint → build → test |
+| Push to `master` or PR | `ci.yml` | lint → build → test |
 | Push tag `v*` | `release.yml` | lint → build → test → npm publish → GitHub Release |
 
 ## License
