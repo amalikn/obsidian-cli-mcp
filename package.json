@@ -44,5 +44,22 @@
     "type": "git",
     "url": "https://github.com/joemugen/obsidian-cli-mcp.git"
   },
+  "homepage": "https://github.com/joemugen/obsidian-cli-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/joemugen/obsidian-cli-mcp/issues"
+  },
+  "author": "Joe François (https://github.com/joemugen)",
+  "keywords": [
+    "obsidian",
+    "mcp",
+    "model-context-protocol",
+    "obsidian-cli",
+    "ai",
+    "llm",
+    "claude",
+    "vault",
+    "notes",
+    "pkm"
+  ],
   "license": "AGPL-3.0-only"
 }

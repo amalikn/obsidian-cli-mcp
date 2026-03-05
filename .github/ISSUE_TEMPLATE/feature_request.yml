@@ -1,0 +1,49 @@
+name: Feature Request
+description: Suggest a new tool or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, check the [existing issues](https://github.com/joemugen/obsidian-cli-mcp/issues)
+        and the [Obsidian CLI docs](https://github.com/obsidianmd/obsidian-cli) to confirm the command exists.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or limitation you're hitting.
+      placeholder: "I often need to... but there's no tool for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the tool or behavior you'd like to see.
+      placeholder: |
+        Add `obsidian_xxx` that calls CLI command `xxx` with params...
+    validations:
+      required: true
+
+  - type: input
+    id: cli_command
+    attributes:
+      label: Obsidian CLI command (if applicable)
+      description: The underlying `obsidian <command>` this maps to.
+      placeholder: "e.g. obsidian xxx --param value"
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you've tried or other approaches.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked that this CLI command exists in `obsidian help`
+        - label: I searched existing issues and this hasn't been requested before
