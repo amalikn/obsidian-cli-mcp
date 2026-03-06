@@ -92,10 +92,10 @@ Add to your project's `.mcp.json` (or `~/.claude/mcp.json` for global):
 Or add it directly from the CLI:
 
 ```bash
-claude mcp add --transport stdio \
-  --env OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
-  --env OBSIDIAN_VAULT=MyVault \
-  obsidian-cli -- npx -y @joemugen/obsidian-cli-mcp
+claude mcp add obsidian-cli --transport stdio \
+  -e OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
+  -e OBSIDIAN_VAULT=MyVault \
+  -- npx -y @joemugen/obsidian-cli-mcp
 ```
 
 ---
