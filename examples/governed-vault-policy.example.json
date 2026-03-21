@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "readAllowlist": [
+    "00_system/templates",
+    "01_inbox",
+    "03_areas",
+    "04_projects-shared-knowledge",
+    "05_resources",
+    "06_decisions",
+    "07_sop",
+    "08_reference",
+    "90_imported"
+  ],
+  "writeAllowlist": [
+    "01_inbox",
+    "03_areas",
+    "04_projects-shared-knowledge",
+    "05_resources",
+    "06_decisions",
+    "07_sop",
+    "08_reference",
+    "90_imported/review",
+    "90_imported/promotion-candidates",
+    "90_imported/promoted-index"
+  ],
+  "discoveryAllowlist": [
+    "03_areas",
+    "04_projects-shared-knowledge",
+    "05_resources",
+    "06_decisions",
+    "07_sop",
+    "08_reference",
+    "90_imported"
+  ],
+  "templateAllowlist": [
+    "00_system/templates"
+  ],
+  "denylist": [
+    "90_imported/private",
+    "90_imported/quarantine",
+    "04_projects-shared-knowledge/restricted",
+    "05_resources/raw-private"
+  ],
+  "denyHiddenPaths": true,
+  "denySymlinks": true,
+  "templateTypes": {
+    "inbox_capture": {
+      "templatePath": "00_system/templates/inbox-capture.md",
+      "destinationRoots": [
+        "01_inbox"
+      ],
+      "requiredProvenance": false
+    },
+    "imported_review": {
+      "templatePath": "00_system/templates/imported-review.md",
+      "destinationRoots": [
+        "90_imported/review"
+      ],
+      "requiredProvenance": true
+    },
+    "promotion_candidate": {
+      "templatePath": "00_system/templates/promotion-candidate.md",
+      "destinationRoots": [
+        "90_imported/promotion-candidates"
+      ],
+      "requiredProvenance": true
+    },
+    "resource_note": {
+      "templatePath": "00_system/templates/resource-note.md",
+      "destinationRoots": [
+        "05_resources"
+      ],
+      "requiredProvenance": true
+    },
+    "decision_madr": {
+      "templatePath": "00_system/templates/decision-madr.md",
+      "destinationRoots": [
+        "06_decisions"
+      ],
+      "requiredProvenance": true
+    },
+    "sop_note": {
+      "templatePath": "00_system/templates/sop-note.md",
+      "destinationRoots": [
+        "07_sop"
+      ],
+      "requiredProvenance": true
+    },
+    "reference_note": {
+      "templatePath": "00_system/templates/reference-note.md",
+      "destinationRoots": [
+        "08_reference"
+      ],
+      "requiredProvenance": true
+    },
+    "promotion_log": {
+      "templatePath": "00_system/templates/promotion-log.md",
+      "destinationRoots": [
+        "90_imported/promoted-index"
+      ],
+      "requiredProvenance": true
+    }
+  },
+  "workflows": {
+    "review": {
+      "sourceRoots": [
+        "90_imported"
+      ],
+      "destinationRoot": "90_imported/review",
+      "templateType": "imported_review"
+    },
+    "promotionCandidate": {
+      "sourceRoots": [
+        "90_imported"
+      ],
+      "destinationRoot": "90_imported/promotion-candidates",
+      "templateType": "promotion_candidate"
+    },
+    "curatedNote": {
+      "sourceRoots": [
+        "90_imported",
+        "90_imported/review"
+      ],
+      "destinationRoots": [
+        "03_areas",
+        "04_projects-shared-knowledge",
+        "05_resources",
+        "06_decisions",
+        "07_sop",
+        "08_reference"
+      ],
+      "allowedTemplateTypes": [
+        "resource_note",
+        "decision_madr",
+        "sop_note",
+        "reference_note"
+      ]
+    },
+    "promotionLog": {
+      "destinationRoot": "90_imported/promoted-index",
+      "templateType": "promotion_log"
+    }
+  }
+}

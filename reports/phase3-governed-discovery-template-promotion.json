@@ -1,0 +1,929 @@
+{
+  "phase": "phase3-governed-discovery-template-promotion",
+  "timestamp": "2026-03-22T01:03:00+11:00",
+  "summary": "Phase 3 adds policy-filtered governed discovery, template-aware governed note creation, and provenance-preserving promotion workflows while keeping destructive, path-crossing, and runtime-state mutation out of scope.",
+  "files_changed": [
+    "CHANGELOG.md",
+    "README.md",
+    "examples/governed-vault-policy.example.json",
+    "reports/phase3-governed-discovery-template-promotion.md",
+    "reports/phase3-governed-discovery-template-promotion.json",
+    "src/runtime-config.ts",
+    "src/server.ts",
+    "src/services/governed-vault.service.ts",
+    "src/tool-registry.ts",
+    "src/tools/links/list-backlinks-governed.tool.ts",
+    "src/tools/links/list-links-governed.tool.ts",
+    "src/tools/search/search-context-governed.tool.ts",
+    "src/tools/search/search-notes-governed.tool.ts",
+    "src/tools/templates/create-note-from-template.tool.ts",
+    "src/tools/workflows/create-review-note.tool.ts",
+    "src/tools/workflows/create-promotion-candidate.tool.ts",
+    "src/tools/workflows/create-curated-note.tool.ts",
+    "src/tools/workflows/log-promotion.tool.ts",
+    "src/vault-policy.ts",
+    "tests/services/governed-vault.service.test.ts",
+    "tests/tool-registry.test.ts",
+    "tests/vault-policy.test.ts"
+  ],
+  "profiles": [
+    "governed-readonly",
+    "governed-mutation",
+    "personal-unrestricted"
+  ],
+  "findings_addressed": [
+    "Added server-side filtered governed discovery for search, search-with-context, outgoing links, and backlinks",
+    "Added approved template type mappings and destination routing to the governed vault policy model",
+    "Added governed create-from-template, review note, promotion candidate, curated note, and promotion log workflows",
+    "Kept source notes immutable during review and promotion helper workflows",
+    "Preserved Phase 2 fail-closed HTTP and pinned-vault guarantees while expanding governed usability"
+  ],
+  "findings_deferred": [
+    "Broad folder listing, tag discovery, task discovery, base discovery, and template name-based discovery remain blocked in governed profiles",
+    "Rename, move, delete, restore, task toggle, and runtime-state mutation remain blocked in governed profiles",
+    "Governed template listing and reading remain blocked because the legacy tools are still name-based rather than policy-bounded",
+    "HTTP is still controlled-use only and not claimed to be internet-safe"
+  ],
+  "discovery_changes": [
+    "Re-enabled obsidian_search and obsidian_search_context in governed profiles through server-side filtered filesystem search constrained by discoveryAllowlist",
+    "Replaced governed obsidian_list_links and obsidian_list_backlinks behavior with server-side filtered graph resolution so blocked targets and sources are not leaked",
+    "Discovery operations now require allowed source paths and never reveal denylisted, hidden, or .obsidian paths"
+  ],
+  "template_creation_changes": [
+    "Added templateAllowlist and templateTypes policy configuration with template type to template path and destination root mapping",
+    "Added obsidian_create_note_from_template for deterministic template rendering with minimal variable substitution and no overwrite behavior",
+    "Template workflows read only from approved template paths under 00_system/templates and write only to approved destination roots"
+  ],
+  "promotion_workflow_changes": [
+    "Added obsidian_create_review_note and obsidian_create_promotion_candidate with deterministic destination derivation and source provenance",
+    "Added obsidian_create_curated_note for curated note creation from approved templates and approved curated zones",
+    "Added obsidian_log_promotion to create promotion log notes without mutating or moving the source note"
+  ],
+  "tool_classification": [
+    {
+      "tool": "obsidian_read_note",
+      "category": "note content",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "canonical note read"
+    },
+    {
+      "tool": "obsidian_create_note",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside writeAllowlist; no name selector; no template insertion; overwrite blocked",
+      "reason": "note creation"
+    },
+    {
+      "tool": "obsidian_append_note",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside writeAllowlist; per-call vault override disabled",
+      "reason": "note write"
+    },
+    {
+      "tool": "obsidian_prepend_note",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside writeAllowlist; per-call vault override disabled",
+      "reason": "note write"
+    },
+    {
+      "tool": "obsidian_move_note",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because move operations cross path boundaries and need stronger policy reasoning"
+    },
+    {
+      "tool": "obsidian_delete_note",
+      "category": "destructive note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "destructive operation"
+    },
+    {
+      "tool": "obsidian_vault_info",
+      "category": "vault metadata",
+      "read_only": true,
+      "governed_readonly": "allowed",
+      "governed_mutation": "allowed",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "bounded vault introspection"
+    },
+    {
+      "tool": "obsidian_list_files",
+      "category": "vault listing",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because broad folder enumeration cannot currently guarantee denylist-safe filtering"
+    },
+    {
+      "tool": "obsidian_list_folders",
+      "category": "vault listing",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because broad folder enumeration cannot currently guarantee denylist-safe filtering"
+    },
+    {
+      "tool": "obsidian_search",
+      "category": "search",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "query limited to discoveryAllowlist; optional path filter inside discoveryAllowlist; results filtered server-side",
+      "reason": "bounded full-text discovery without blocked-path leakage"
+    },
+    {
+      "tool": "obsidian_search_context",
+      "category": "search",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "query limited to discoveryAllowlist; optional path filter inside discoveryAllowlist; results filtered server-side",
+      "reason": "bounded search with context without blocked-path leakage"
+    },
+    {
+      "tool": "obsidian_list_properties",
+      "category": "metadata",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "frontmatter read"
+    },
+    {
+      "tool": "obsidian_get_property",
+      "category": "metadata",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "frontmatter read"
+    },
+    {
+      "tool": "obsidian_set_property",
+      "category": "metadata mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside writeAllowlist; per-call vault override disabled",
+      "reason": "frontmatter mutation"
+    },
+    {
+      "tool": "obsidian_remove_property",
+      "category": "metadata mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside writeAllowlist; per-call vault override disabled",
+      "reason": "frontmatter mutation"
+    },
+    {
+      "tool": "obsidian_list_tags",
+      "category": "metadata",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because vault-wide metadata discovery bypasses exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_get_tag",
+      "category": "metadata",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because tag queries are vault-wide discovery operations"
+    },
+    {
+      "tool": "obsidian_list_links",
+      "category": "graph",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist and discoveryAllowlist; linked results filtered server-side",
+      "reason": "filtered outgoing link discovery"
+    },
+    {
+      "tool": "obsidian_list_backlinks",
+      "category": "graph",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist and discoveryAllowlist; backlink sources filtered server-side",
+      "reason": "filtered backlink discovery"
+    },
+    {
+      "tool": "obsidian_list_orphans",
+      "category": "graph",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because vault-wide graph audits bypass exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_read_daily",
+      "category": "daily notes",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because runtime-derived daily note resolution bypasses exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_append_daily",
+      "category": "daily note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because runtime-derived daily note resolution bypasses exact-path policy"
+    },
+    {
+      "tool": "obsidian_prepend_daily",
+      "category": "daily note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because runtime-derived daily note resolution bypasses exact-path policy"
+    },
+    {
+      "tool": "obsidian_list_tasks",
+      "category": "task discovery",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because task discovery can expand beyond explicit policy-bounded paths"
+    },
+    {
+      "tool": "obsidian_toggle_task",
+      "category": "task mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because line-based task toggles are deferred until they can be bounded more tightly"
+    },
+    {
+      "tool": "obsidian_list_templates",
+      "category": "templates",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because template discovery is not yet bound to explicit path policy"
+    },
+    {
+      "tool": "obsidian_read_template",
+      "category": "templates",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because template resolution is name-based rather than exact-path governed"
+    },
+    {
+      "tool": "obsidian_insert_template",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because active-note template insertion depends on runtime state rather than exact-path policy"
+    },
+    {
+      "tool": "obsidian_list_bookmarks",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "bookmark state is non-canonical .obsidian runtime data"
+    },
+    {
+      "tool": "obsidian_add_bookmark",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "bookmark mutation"
+    },
+    {
+      "tool": "obsidian_list_deadends",
+      "category": "graph",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because vault-wide graph audits bypass exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_list_unresolved",
+      "category": "graph",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because vault-wide graph audits bypass exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_outline",
+      "category": "note structure",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "note introspection"
+    },
+    {
+      "tool": "obsidian_wordcount",
+      "category": "note structure",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "note introspection"
+    },
+    {
+      "tool": "obsidian_rename_note",
+      "category": "note mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed-mutation because rename moves identity and backlink state across paths"
+    },
+    {
+      "tool": "obsidian_file_info",
+      "category": "note metadata",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "file metadata read"
+    },
+    {
+      "tool": "obsidian_list_plugins",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical plugin state"
+    },
+    {
+      "tool": "obsidian_list_plugins_enabled",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical plugin state"
+    },
+    {
+      "tool": "obsidian_get_plugin",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical plugin state"
+    },
+    {
+      "tool": "obsidian_enable_plugin",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": ".obsidian / plugin state mutation"
+    },
+    {
+      "tool": "obsidian_disable_plugin",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": ".obsidian / plugin state mutation"
+    },
+    {
+      "tool": "obsidian_install_plugin",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "plugin payload mutation"
+    },
+    {
+      "tool": "obsidian_uninstall_plugin",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "plugin payload mutation"
+    },
+    {
+      "tool": "obsidian_history_list",
+      "category": "history introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "retention/privacy-sensitive history surface"
+    },
+    {
+      "tool": "obsidian_history_read",
+      "category": "history introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "retention/privacy-sensitive history surface"
+    },
+    {
+      "tool": "obsidian_history_restore",
+      "category": "restore mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "content restore mutation"
+    },
+    {
+      "tool": "obsidian_sync_status",
+      "category": "sync introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "sync subsystem state"
+    },
+    {
+      "tool": "obsidian_sync_history",
+      "category": "sync introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "sync subsystem state"
+    },
+    {
+      "tool": "obsidian_sync_read",
+      "category": "sync introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "sync subsystem state"
+    },
+    {
+      "tool": "obsidian_sync_restore",
+      "category": "restore mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "content restore mutation"
+    },
+    {
+      "tool": "obsidian_sync_deleted",
+      "category": "sync introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "sync subsystem state"
+    },
+    {
+      "tool": "obsidian_list_bases",
+      "category": "bases",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because base discovery is vault-wide and not exact-path policy-bounded"
+    },
+    {
+      "tool": "obsidian_query_base",
+      "category": "bases",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because base queries are not constrained by exact-path vault policy"
+    },
+    {
+      "tool": "obsidian_list_base_views",
+      "category": "bases",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because base view discovery is not exact-path policy-bounded"
+    },
+    {
+      "tool": "obsidian_create_base_item",
+      "category": "bases mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "base data mutation"
+    },
+    {
+      "tool": "obsidian_list_vaults",
+      "category": "environment introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "expands vault discovery beyond governed scope"
+    },
+    {
+      "tool": "obsidian_version",
+      "category": "version",
+      "read_only": true,
+      "governed_readonly": "allowed",
+      "governed_mutation": "allowed",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "safe environment info"
+    },
+    {
+      "tool": "obsidian_list_recents",
+      "category": "workspace/session introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "transient session state"
+    },
+    {
+      "tool": "obsidian_random_read",
+      "category": "note content",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because random note selection bypasses exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_list_aliases",
+      "category": "metadata",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "blocked in governed profiles because vault-wide alias discovery bypasses exact-path policy checks"
+    },
+    {
+      "tool": "obsidian_workspace",
+      "category": "workspace/session introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical runtime state"
+    },
+    {
+      "tool": "obsidian_list_tabs",
+      "category": "workspace/session introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical runtime state"
+    },
+    {
+      "tool": "obsidian_daily_path",
+      "category": "workspace/session introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "runtime-dependent path resolution"
+    },
+    {
+      "tool": "obsidian_list_commands",
+      "category": "command introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "primarily feeds later command execution"
+    },
+    {
+      "tool": "obsidian_execute_command",
+      "category": "execute",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "open-ended command execution"
+    },
+    {
+      "tool": "obsidian_list_hotkeys",
+      "category": "command introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "app/runtime introspection"
+    },
+    {
+      "tool": "obsidian_get_hotkey",
+      "category": "command introspection",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "app/runtime introspection"
+    },
+    {
+      "tool": "obsidian_list_themes",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical theme state"
+    },
+    {
+      "tool": "obsidian_get_theme",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical theme state"
+    },
+    {
+      "tool": "obsidian_set_theme",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "theme mutation"
+    },
+    {
+      "tool": "obsidian_install_theme",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "theme payload mutation"
+    },
+    {
+      "tool": "obsidian_uninstall_theme",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "theme payload mutation"
+    },
+    {
+      "tool": "obsidian_list_snippets",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical snippet state"
+    },
+    {
+      "tool": "obsidian_list_snippets_enabled",
+      "category": "runtime inventory",
+      "read_only": true,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "non-canonical snippet state"
+    },
+    {
+      "tool": "obsidian_enable_snippet",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "snippet mutation"
+    },
+    {
+      "tool": "obsidian_disable_snippet",
+      "category": "runtime-state mutation",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "snippet mutation"
+    },
+    {
+      "tool": "obsidian_diff",
+      "category": "note comparison",
+      "read_only": true,
+      "governed_readonly": "policy-gated",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "allowed",
+      "policy_required": "exact note path inside readAllowlist; per-call vault override disabled",
+      "reason": "read-only comparison"
+    },
+    {
+      "tool": "obsidian_eval",
+      "category": "execute",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "blocked",
+      "personal_unrestricted": "allowed",
+      "policy_required": "none",
+      "reason": "arbitrary code execution"
+    },
+    {
+      "tool": "obsidian_create_note_from_template",
+      "category": "template workflow",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "blocked",
+      "policy_required": "approved templateType, templateAllowlist read, template destination roots, writeAllowlist, no overwrite",
+      "reason": "deterministic template-based note creation without runtime-state insertion"
+    },
+    {
+      "tool": "obsidian_create_review_note",
+      "category": "promotion workflow",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "blocked",
+      "policy_required": "review workflow sourceRoots, destinationRoot, templateType, writeAllowlist, provenance required",
+      "reason": "create provenance-preserving review notes from approved import sources"
+    },
+    {
+      "tool": "obsidian_create_promotion_candidate",
+      "category": "promotion workflow",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "blocked",
+      "policy_required": "promotionCandidate workflow sourceRoots, destinationRoot, templateType, writeAllowlist, provenance required",
+      "reason": "create provenance-preserving promotion candidates from approved import sources"
+    },
+    {
+      "tool": "obsidian_create_curated_note",
+      "category": "promotion workflow",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "blocked",
+      "policy_required": "curatedNote sourceRoots, destinationRoots, allowedTemplateTypes, template destination roots, writeAllowlist",
+      "reason": "create curated notes with explicit provenance and destination controls"
+    },
+    {
+      "tool": "obsidian_log_promotion",
+      "category": "promotion workflow",
+      "read_only": false,
+      "governed_readonly": "blocked",
+      "governed_mutation": "policy-gated",
+      "personal_unrestricted": "blocked",
+      "policy_required": "promotionLog destinationRoot, optional templateType, source and curated paths inside governed policy",
+      "reason": "record promotion events without mutating source notes"
+    }
+  ],
+  "policy_changes": [
+    "Added discoveryAllowlist for bounded server-side discovery zones",
+    "Added templateAllowlist for approved template reads",
+    "Added templateTypes mapping with templatePath, destinationRoots, and requiredProvenance",
+    "Added workflows.review, workflows.promotionCandidate, workflows.curatedNote, and workflows.promotionLog routing rules",
+    "Policy validation now rejects route and template wiring that falls outside governing read/write/template allowlists"
+  ],
+  "tests_run": [
+    "npm run lint",
+    "npm run build",
+    "npm test"
+  ],
+  "results": [
+    "npm run lint passed",
+    "npm run build passed",
+    "npm test passed",
+    "84 test files passed",
+    "337 tests passed",
+    "governed-readonly allows 13 tools including 4 governed discovery tools",
+    "governed-mutation allows 23 tools including 5 workflow tools",
+    "60 tools remain blocked even in governed-mutation"
+  ],
+  "remaining_gaps": [
+    "Broad governed folder, tag, task, base, and template discovery remain blocked pending additional policy-safe filtering",
+    "Governed rename, move, delete, restore, and task toggle remain intentionally blocked",
+    "Promotion workflows create new notes and logs only; they do not yet perform approval-state transitions or bulk promotion",
+    "HTTP hardening remains limited to controlled bearer-auth use and does not claim stronger identity or internet-safe deployment"
+  ],
+  "usable_now": "Yes. governed-readonly is usable for bounded discovery and governed-mutation is usable for template-aware note creation plus review and promotion helper workflows inside a pinned vault with an explicit policy file.",
+  "limitations": [
+    "Validation used disposable temp vaults only; no real Obsidian vault was touched",
+    "Governed workflows do not overwrite existing notes",
+    "Governed discovery is intentionally narrower than the unrestricted legacy surface",
+    "Source notes are not moved or mutated by the promotion helpers in this phase"
+  ]
+}

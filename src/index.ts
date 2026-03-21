@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 import { createServer } from './server.js'
+import { resolveRuntimeConfig } from './runtime-config.js'
 import { startStdioTransport } from './transports/stdio.js'
 import { startHttpTransport } from './transports/http.js'
 
-const transport = process.env['MCP_TRANSPORT'] ?? 'stdio'
-const port = parseInt(process.env['MCP_PORT'] ?? '3000', 10)
+const runtimeConfig = resolveRuntimeConfig()
+const server = createServer(runtimeConfig)
 
-const server = createServer()
-
-if (transport === 'http') {
-  startHttpTransport(server, port).catch((err: Error) => {
+if (runtimeConfig.transport === 'http') {
+  startHttpTransport(server, {
+    port: runtimeConfig.port,
+    host: runtimeConfig.httpHost,
+    authToken: runtimeConfig.httpAuthToken,
+  }).catch((err: Error) => {
     console.error('Failed to start HTTP transport:', err.message)
     process.exit(1)
   })

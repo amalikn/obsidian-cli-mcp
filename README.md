@@ -1,6 +1,6 @@
 # obsidian-cli-mcp
 
-MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) — exposes 78 semantic tools to read, write and manage your Obsidian vault from any MCP-compatible AI client.
+MCP server for the [Obsidian CLI](https://github.com/obsidianmd/obsidian-cli) with explicit runtime profiles for governed and personal use. The default profile is `governed-readonly`; `governed-mutation` adds bounded template and promotion workflows on top of the read surface, and the broad legacy surface remains available only through an explicit `personal-unrestricted` profile.
 
 ## Requirements
 
@@ -31,11 +31,50 @@ npm install -g @joemugen/obsidian-cli-mcp
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OBSIDIAN_BIN` | Path to the Obsidian CLI binary | `obsidian` |
-| `OBSIDIAN_VAULT` | Default vault name | active vault |
+| `OBSIDIAN_VAULT` | Default pinned vault name | required in governed profiles; optional in `personal-unrestricted` |
+| `OBSIDIAN_VAULT_ROOT` | Canonical filesystem root of the pinned vault | required in governed profiles |
+| `OBSIDIAN_POLICY_FILE` | JSON vault policy file | required in governed profiles |
+| `MCP_PROFILE` | `governed-readonly`, `governed-mutation`, or `personal-unrestricted` | `governed-readonly` |
 | `MCP_TRANSPORT` | `stdio` or `http` | `stdio` |
 | `MCP_PORT` | HTTP port (when `MCP_TRANSPORT=http`) | `3000` |
+| `MCP_HTTP_HOST` | HTTP bind host (when `MCP_TRANSPORT=http`) | `127.0.0.1` |
+| `MCP_HTTP_AUTH_TOKEN` | Shared bearer token for HTTP auth | required for governed HTTP and any remote HTTP bind |
+| `MCP_HTTP_ALLOW_REMOTE_BIND` | Explicit remote bind opt-in (`true`) | disabled by default |
 
 > **Important (macOS):** always point `OBSIDIAN_BIN` to the Homebrew binary (`$(brew --prefix)/bin/obsidian`). The Homebrew binary flushes stdout to the pipe correctly; a plain app bundle symlink does not.
+
+### Profiles
+
+- `governed-readonly`
+  - Safe default.
+  - Registers exact-path note/property reads plus policy-filtered governed discovery (`obsidian_search`, `obsidian_search_context`, filtered links, filtered backlinks).
+  - Requires `OBSIDIAN_VAULT`, `OBSIDIAN_VAULT_ROOT`, and `OBSIDIAN_POLICY_FILE`.
+  - Disables per-call vault overrides.
+- `governed-mutation`
+  - Adds the exact-path mutation surface plus governed template and promotion helpers on top of `governed-readonly`.
+  - Allows exact-path note/property edits and the governed workflow tools: `obsidian_create_note_from_template`, `obsidian_create_review_note`, `obsidian_create_promotion_candidate`, `obsidian_create_curated_note`, and `obsidian_log_promotion`.
+  - Blocks rename, move, delete, task toggle, template insertion into the active note, daily mutation, plugin/theme/snippet mutation, runtime-state mutation, and execute/eval surfaces.
+  - Requires the same pinned-vault and policy inputs as `governed-readonly`.
+- `personal-unrestricted`
+  - Compatibility profile for the full legacy surface, including mutating and developer-oriented tools.
+  - Not the default.
+  - Intended for controlled personal use, not governed deployment.
+
+### Governed vault policy
+
+Governed profiles enforce a real path policy before the Obsidian CLI is invoked:
+
+- exact-path note/property operations only
+- bounded discovery only inside configured `discoveryAllowlist` roots
+- approved template reads only inside configured `templateAllowlist` roots
+- workflow routing for review notes, promotion candidates, curated destinations, and promotion logs
+- default deny for writes outside the configured write allowlist
+- explicit denylist support
+- hidden path and `.obsidian/**` denial by default
+- canonical path normalization against the pinned `OBSIDIAN_VAULT_ROOT`
+- optional symlink traversal denial
+
+See [`examples/governed-vault-policy.example.json`](examples/governed-vault-policy.example.json) for a conservative second-brain example.
 
 ---
 
@@ -58,8 +97,11 @@ Edit the config file for your OS:
       "command": "npx",
       "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
+        "MCP_PROFILE": "governed-readonly",
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
-        "OBSIDIAN_VAULT": "MyVault"
+        "OBSIDIAN_VAULT": "MyVault",
+        "OBSIDIAN_VAULT_ROOT": "/path/to/MyVault",
+        "OBSIDIAN_POLICY_FILE": "/path/to/governed-vault-policy.json"
       }
     }
   }
@@ -81,8 +123,11 @@ Add to your project's `.mcp.json` (or `~/.claude/mcp.json` for global):
       "command": "npx",
       "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
+        "MCP_PROFILE": "governed-readonly",
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
-        "OBSIDIAN_VAULT": "MyVault"
+        "OBSIDIAN_VAULT": "MyVault",
+        "OBSIDIAN_VAULT_ROOT": "/path/to/MyVault",
+        "OBSIDIAN_POLICY_FILE": "/path/to/governed-vault-policy.json"
       }
     }
   }
@@ -93,8 +138,11 @@ Or add it directly from the CLI:
 
 ```bash
 claude mcp add obsidian-cli --transport stdio \
+  -e MCP_PROFILE=governed-readonly \
   -e OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
   -e OBSIDIAN_VAULT=MyVault \
+  -e OBSIDIAN_VAULT_ROOT=/path/to/MyVault \
+  -e OBSIDIAN_POLICY_FILE=/path/to/governed-vault-policy.json \
   -- npx -y @joemugen/obsidian-cli-mcp
 ```
 
@@ -111,8 +159,11 @@ Edit `~/.cursor/mcp.json`:
       "command": "npx",
       "args": ["-y", "@joemugen/obsidian-cli-mcp"],
       "env": {
+        "MCP_PROFILE": "governed-readonly",
         "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
-        "OBSIDIAN_VAULT": "MyVault"
+        "OBSIDIAN_VAULT": "MyVault",
+        "OBSIDIAN_VAULT_ROOT": "/path/to/MyVault",
+        "OBSIDIAN_POLICY_FILE": "/path/to/governed-vault-policy.json"
       }
     }
   }
@@ -133,8 +184,11 @@ Edit `~/.config/zed/settings.json`:
         "path": "npx",
         "args": ["-y", "@joemugen/obsidian-cli-mcp"],
         "env": {
+          "MCP_PROFILE": "governed-readonly",
           "OBSIDIAN_BIN": "/opt/homebrew/bin/obsidian",
-          "OBSIDIAN_VAULT": "MyVault"
+          "OBSIDIAN_VAULT": "MyVault",
+          "OBSIDIAN_VAULT_ROOT": "/path/to/MyVault",
+          "OBSIDIAN_POLICY_FILE": "/path/to/governed-vault-policy.json"
         }
       }
     }
@@ -147,17 +201,45 @@ Edit `~/.config/zed/settings.json`:
 ### HTTP transport (network / multi-client)
 
 ```bash
-MCP_TRANSPORT=http MCP_PORT=3000 \
+MCP_PROFILE=governed-readonly MCP_TRANSPORT=http MCP_PORT=3000 \
+MCP_HTTP_HOST=127.0.0.1 \
+MCP_HTTP_AUTH_TOKEN=change-me \
 OBSIDIAN_BIN=/opt/homebrew/bin/obsidian \
 OBSIDIAN_VAULT=MyVault \
+OBSIDIAN_VAULT_ROOT=/path/to/MyVault \
+OBSIDIAN_POLICY_FILE=/path/to/governed-vault-policy.json \
 node dist/index.js
 ```
 
 The server exposes a Streamable HTTP endpoint at `http://localhost:3000/mcp`.
 
+HTTP transport remains opt-in and is not the default deployment path. Phase 2 hardening is deliberately limited:
+
+- loopback (`127.0.0.1`) remains the default bind
+- governed HTTP requires `MCP_HTTP_AUTH_TOKEN`
+- non-loopback bind requires `MCP_HTTP_ALLOW_REMOTE_BIND=true`
+- remote bind without explicit opt-in fails closed
+- this is controlled governed use, not an internet-safe deployment model
+
 ---
 
 ## Tools
+
+The default `governed-readonly` profile registers only the bounded governed read and discovery surface. `governed-mutation` adds the exact-path note/property mutation tools plus the governed workflow tools listed below. The full legacy tool catalog remains available only when `MCP_PROFILE=personal-unrestricted` is set explicitly.
+
+### Governed workflow tools
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_search` | Search only within policy-approved discovery roots with server-side result filtering |
+| `obsidian_search_context` | Search with bounded context inside policy-approved discovery roots |
+| `obsidian_list_links` | List outgoing links from an allowed note, filtering blocked targets server-side |
+| `obsidian_list_backlinks` | List backlinks to an allowed note, filtering blocked sources server-side |
+| `obsidian_create_note_from_template` | Create a note from an approved governed template type into an approved destination |
+| `obsidian_create_review_note` | Create a provenance-preserving review note for an approved source note |
+| `obsidian_create_promotion_candidate` | Create a provenance-preserving promotion-candidate note for an approved source note |
+| `obsidian_create_curated_note` | Create a curated note from an approved template type into an approved curated zone |
+| `obsidian_log_promotion` | Create a promotion log note linking the source and curated notes |
 
 ### Notes
 
